@@ -1,0 +1,6 @@
+# Cache de importação do Godot (não versionar)
+.godot/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db

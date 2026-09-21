@@ -13,10 +13,16 @@ gráfica, vou guardando aqui o que estudo e testo.
 - [snow-shade](snow-shade/doc.md) — máscara de acúmulo por inclinação
   (produto escalar da normal com o "para cima"), mix rocha/neve e ruído.
 
+## Projetos
+
+- [terreno-lunar](terreno-lunar/) — projeto Godot que gera a malha do terreno a
+  partir de um heightmap (pipeline do Mês 05: relevo → malha). Abra o
+  `project.godot` no Godot e rode a cena `terreno.tscn`.
+
 ## Ferramentas
 
 - Godot 4.7
-- GLSL (shaders)
+- GLSL (shaders) e GDScript
 
 ## Organização
 
