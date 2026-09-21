@@ -1,9 +1,10 @@
 # Neve por inclinação — snow-shade
 
-Anotações do shader de acúmulo de neve que montei no editor visual do Godot
-(o de nós, não em código). A ideia é o shader decidir sozinho onde cai neve e
-onde fica rocha exposta, a partir da inclinação da superfície — sem pintar nada
-à mão.
+Anotações do shader de acúmulo de neve. Montei primeiro no editor visual do Godot
+(o de nós); aqui no repo está a versão em código ([`neve.gdshader`](neve.gdshader))
+com a mesma lógica, e uma cena ([`neve.tscn`](neve.tscn)) que já tem neve caindo.
+A ideia é o shader decidir sozinho onde cai neve e onde fica rocha exposta, a
+partir da inclinação da superfície — sem pintar nada à mão.
 
 Fonte: *(link do vídeo — preencher)*
 
@@ -49,6 +50,35 @@ Multipliquei um ruído em cima do dot pra máscara não ficar com uma borda
 perfeita e artificial. Dá aquelas falhas e reentrâncias que parecem naturais.
 O regolito também não se acumula em linha reta, então o ruído serve pra dar a
 granularidade imperfeita do solo lunar.
+
+## Neve caindo (partículas)
+
+Além da pintura, a cena tem neve caindo de verdade, com um nó `GPUParticles3D`.
+As partículas nascem numa caixa acima da cena e caem com gravidade suave; cada
+floco é um quad branco pequeno em billboard (sempre virado pra câmera).
+
+Isso é o embrião da **poeira lunar**: a mesma mecânica de partículas na GPU vai
+servir pra poeira/regolito ejetado pela roda do rover. A diferença é que, na Lua,
+não tem ar — a poeira não flutua nem desacelera como floco de neve; ela sobe e cai
+em trajetória balística e ainda sofre carga eletrostática do vento solar. Então eu
+reaproveito a ideia visual, mas os parâmetros (gravidade, arrasto, tempo de vida)
+mudam pra bater com a física lunar.
+
+## Como isso se encaixa na pesquisa
+
+É do meu Mês 06 (shaders da superfície) e prepara o terreno pros meses de
+deformação (Mês 08), quando a roda vai levantar poeira. Pintar por inclinação e
+simular partículas dá fidelidade visual pros testes de navegação e visão
+computacional do ExoTerra — que é pra isso que o simulador existe.
+
+## Referências
+
+- COLWELL, J. E. et al. Lunar surface: Dust dynamics and regolith mechanics.
+  *Reviews of Geophysics*, v. 45, 2007. *(conferir dados da citação)*
+- STUBBS, T. J. et al. A dynamic fountain model for lunar dust. *Advances in Space
+  Research*, v. 37, 2006. *(conferir dados da citação)*
+- GODOT ENGINE. Godot Engine Documentation — Particle Systems / Shading Language.
+  Disponível em: https://docs.godotengine.org. Acesso em: 2026.
 
 ---
 

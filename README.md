@@ -12,6 +12,7 @@ gráfica, vou guardando aqui o que estudo e testo.
   mapa de normais, textura de tela (refração) e aberração cromática.
 - [snow-shade](snow-shade/doc.md) — máscara de acúmulo por inclinação
   (produto escalar da normal com o "para cima"), mix rocha/neve e ruído.
+  Inclui o shader em código (`neve.gdshader`) e uma cena com neve caindo.
 
 ## Projetos
 
