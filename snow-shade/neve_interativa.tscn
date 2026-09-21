@@ -1,0 +1,85 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Shader" path="res://neve_interativa.gdshader" id="1_shader"]
+[ext_resource type="Script" path="res://neve_interativa.gd" id="2_script"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 2
+sky = SubResource("Sky")
+tonemap_mode = 2
+
+[sub_resource type="ShaderMaterial" id="NeveMat"]
+shader = ExtResource("1_shader")
+shader_parameter/profundidade = 0.6
+shader_parameter/cor_neve = Color(1, 1, 1, 1)
+shader_parameter/cor_comprimida = Color(0.68, 0.7, 0.8, 1)
+
+[sub_resource type="PlaneMesh" id="Plane"]
+size = Vector2(20, 20)
+subdivide_width = 200
+subdivide_depth = 200
+
+[sub_resource type="SphereMesh" id="Sphere"]
+radius = 0.6
+height = 1.2
+
+[sub_resource type="StandardMaterial3D" id="BolaMat"]
+albedo_color = Color(0.85, 0.3, 0.25, 1)
+
+[sub_resource type="StandardMaterial3D" id="FlakeMat"]
+shading_mode = 0
+albedo_color = Color(1, 1, 1, 1)
+billboard_mode = 1
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="Quad"]
+material = SubResource("FlakeMat")
+size = Vector2(0.1, 0.1)
+
+[sub_resource type="ParticleProcessMaterial" id="PPM"]
+emission_shape = 3
+emission_box_extents = Vector3(11, 0.5, 11)
+direction = Vector3(0, -1, 0)
+spread = 8.0
+initial_velocity_min = 0.8
+initial_velocity_max = 1.6
+gravity = Vector3(0, -1.0, 0)
+scale_min = 0.4
+scale_max = 1.2
+
+[node name="NeveInterativa" type="Node3D"]
+script = ExtResource("2_script")
+agente = NodePath("Bola")
+
+[node name="Neve" type="MeshInstance3D" parent="."]
+material_override = SubResource("NeveMat")
+mesh = SubResource("Plane")
+
+[node name="Bola" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.6, 0)
+material_override = SubResource("BolaMat")
+mesh = SubResource("Sphere")
+
+[node name="NeveParticulas" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 0)
+amount = 1200
+lifetime = 8.0
+visibility_aabb = AABB(-12, -14, -12, 24, 16, 24)
+process_material = SubResource("PPM")
+draw_pass_1 = SubResource("Quad")
+
+[node name="Sol" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.643, -0.766, 0, 0.766, 0.643, 0, 10, 0)
+light_energy = 1.4
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.838, -0.545, 0, 0.545, 0.838, 0, 12, 18)

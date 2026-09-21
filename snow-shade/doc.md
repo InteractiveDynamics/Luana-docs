@@ -64,6 +64,26 @@ em trajetória balística e ainda sofre carga eletrostática do vento solar. Ent
 reaproveito a ideia visual, mas os parâmetros (gravidade, arrasto, tempo de vida)
 mudam pra bater com a física lunar.
 
+## Neve interativa (rastro / deformação)
+
+A cena `neve_interativa.tscn` vai além: o chão **afunda** onde a bola passa e
+deixa rastro permanente. Como funciona:
+
+- Guardo um **mapa de trilha** (uma imagem em tons de cinza) por código: a cada
+  frame eu "carimbo" a posição da bola nessa imagem (`neve_interativa.gd`).
+- O shader (`neve_interativa.gdshader`) lê a imagem no `vertex()` e baixa o
+  vértice (`VERTEX.y -= trilha * profundidade`). Por isso o chão precisa ter muitos
+  vértices — o `PlaneMesh` está bem subdividido.
+- A imagem nunca zera, então o rastro fica permanente.
+
+É o embrião direto do **Mês 08**: é só trocar a bola pela roda do rover e o carimbo
+passa a vir da física da ExoPhysics — a marca do pneu no regolito é exatamente esse
+mecanismo (deformar a malha visual onde há contato).
+
+Limitação atual: as normais não são recalculadas depois de afundar, então a
+depressão aparece mais pela silhueta e pela cor do que pela sombra. Dá pra melhorar
+recalculando a normal a partir da inclinação da trilha. *(a fazer)*
+
 ## Como isso se encaixa na pesquisa
 
 É do meu Mês 06 (shaders da superfície) e prepara o terreno pros meses de
