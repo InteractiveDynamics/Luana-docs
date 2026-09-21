@@ -21,9 +21,9 @@ noise = SubResource("FNL")
 
 [sub_resource type="ShaderMaterial" id="NeveMat"]
 shader = ExtResource("1_shader")
-shader_parameter/cor_neve = Color(0.95, 0.96, 1, 1)
+shader_parameter/cor_neve = Color(1, 1, 1, 1)
 shader_parameter/cor_rocha = Color(0.25, 0.24, 0.23, 1)
-shader_parameter/limiar = 0.6
+shader_parameter/limiar = 0.45
 shader_parameter/suavizacao = 0.1
 shader_parameter/ruido_escala = 8.0
 shader_parameter/ruido_forca = 0.2
@@ -53,7 +53,7 @@ direction = Vector3(0, -1, 0)
 spread = 8.0
 initial_velocity_min = 0.8
 initial_velocity_max = 1.6
-gravity = Vector3(0, -1.2, 0)
+gravity = Vector3(0, -1.0, 0)
 scale_min = 0.4
 scale_max = 1.2
 
@@ -70,13 +70,15 @@ mesh = SubResource("Sphere")
 
 [node name="NeveParticulas" type="GPUParticles3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 0)
-amount = 800
-lifetime = 6.0
+amount = 1500
+lifetime = 8.0
+visibility_aabb = AABB(-16, -14, -16, 32, 16, 32)
 process_material = SubResource("PPM")
 draw_pass_1 = SubResource("Quad")
 
 [node name="Sol" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.643, -0.766, 0, 0.766, 0.643, 0, 10, 0)
+light_energy = 1.4
 shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
