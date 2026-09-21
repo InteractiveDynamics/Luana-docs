@@ -16,8 +16,10 @@ gráfica, vou guardando aqui o que estudo e testo.
 ## Projetos
 
 - [terreno-lunar](terreno-lunar/) — projeto Godot que gera a malha do terreno a
-  partir de um heightmap (pipeline do Mês 05: relevo → malha). Abra o
-  `project.godot` no Godot e rode a cena `terreno.tscn`.
+  partir de um heightmap (pipeline do Mês 05: relevo → malha) e pinta por
+  inclinação (regolito nas partes planas, rocha nas encostas). Anotação em
+  [terreno-lunar/doc.md](terreno-lunar/doc.md). Abra o `project.godot` no Godot e
+  rode a cena `terreno.tscn`.
 
 ## Ferramentas
 
