@@ -3,6 +3,7 @@ extends Node3D
 ## a bola passou. A cada frame carimba a posição da bola na imagem e envia pro
 ## shader, que afunda a malha ali. O rastro é persistente (a imagem nunca zera).
 ##
+## Controle a bola com as SETAS do teclado. Sem input, ela anda sozinha em círculo.
 ## Depois, a "bola" vira a roda do rover, e o carimbo vem da física da ExoPhysics.
 
 @export var agente: Node3D              # a bola que deixa o rastro
@@ -10,6 +11,7 @@ extends Node3D
 @export var resolucao: int = 256        # resolução do mapa de trilha
 @export var raio_pincel: float = 0.05   # tamanho da pegada (em UV, 0..1)
 @export var forca: float = 1.0          # o quanto cada passagem afunda
+@export var velocidade: float = 6.0     # velocidade da bola com as setas
 
 var _img: Image
 var _tex: ImageTexture
@@ -25,12 +27,25 @@ func _ready() -> void:
 	if mat:
 		mat.set_shader_parameter("trilha", _tex)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if agente == null:
 		return
-	# Move a bola em círculo, só pra demonstrar o rastro.
-	var t := float(Time.get_ticks_msec()) / 1000.0
-	agente.position = Vector3(cos(t) * 6.0, agente.position.y, sin(t) * 6.0)
+
+	# Setas do teclado movem a bola; sem input, ela anda em círculo.
+	var dir := Vector3.ZERO
+	dir.x = Input.get_axis("ui_left", "ui_right")
+	dir.z = Input.get_axis("ui_up", "ui_down")
+	if dir.length() > 0.01:
+		agente.position += dir.normalized() * velocidade * delta
+	else:
+		var t := float(Time.get_ticks_msec()) / 1000.0
+		agente.position = Vector3(cos(t) * 6.0, agente.position.y, sin(t) * 6.0)
+
+	# Mantém a bola dentro do plano.
+	var meia := tamanho_plano * 0.5 - 0.5
+	agente.position.x = clamp(agente.position.x, -meia, meia)
+	agente.position.z = clamp(agente.position.z, -meia, meia)
+
 	_carimbar(agente.global_position)
 
 func _carimbar(pos_mundo: Vector3) -> void:

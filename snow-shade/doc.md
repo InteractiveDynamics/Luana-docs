@@ -75,14 +75,15 @@ deixa rastro permanente. Como funciona:
   vértice (`VERTEX.y -= trilha * profundidade`). Por isso o chão precisa ter muitos
   vértices — o `PlaneMesh` está bem subdividido.
 - A imagem nunca zera, então o rastro fica permanente.
+- A normal é recalculada no `vertex()` pela inclinação da trilha, então a cova
+  ganha sombra de verdade (não fica um afundamento chapado).
+
+É efeito de **runtime**: no editor o chão fica plano; só aparece rodando (F5).
+Controlo a bola pelas **setas** do teclado (sem input, ela anda em círculo sozinha).
 
 É o embrião direto do **Mês 08**: é só trocar a bola pela roda do rover e o carimbo
 passa a vir da física da ExoPhysics — a marca do pneu no regolito é exatamente esse
 mecanismo (deformar a malha visual onde há contato).
-
-Limitação atual: as normais não são recalculadas depois de afundar, então a
-depressão aparece mais pela silhueta e pela cor do que pela sombra. Dá pra melhorar
-recalculando a normal a partir da inclinação da trilha. *(a fazer)*
 
 ## Como isso se encaixa na pesquisa
 
