@@ -1,70 +1,61 @@
-# Anatomia de Shaders em Código (.gdshader)
-**Análise teórica dos conceitos de processamento gráfico baseados no simulador de fluidos**
+# Água em código — water-shade
 
----
+Anotações do shader de água que escrevi direto em código (`.gdshader`), diferente
+do de neve, que montei no editor visual. Boa parte dos conceitos daqui eu
+reaproveito pro ExoTerra.
 
-## 1. Funções de Vértice vs. Fragmento (Vertex vs. Fragment Functions)
+Fonte: *(link do vídeo — preencher)*
 
-### O Conceito:
-O código de um shader 3D é dividido em duas etapas fundamentais que rodam diretamente na placa de vídeo (GPU) de forma paralela:
-* **`vertex()`:** É uma função executada para cada **vértice geométrico** visível do modelo 3D. Serve para alterar a forma física, posição e deformação da malha.
-* **`fragment()`:** É executada para cada **pixel** que o objeto ocupa na tela. Serve para definir a cor final, o brilho, a transparência e como a luz rebate naquele ponto.
+O objetivo era uma superfície de água com movimento, refração e uns defeitos de
+lente. Código completo em [`water_shader.gdshader`](water_shader.gdshader).
 
-### No tutorial:
-Focamos na função `fragment()`, criando a ilusão visual de movimento de ondas alterando apenas as cores, normais e reflexos dos pixels, sem modificar a geometria real do plano tridimensional.
+## vertex() vs fragment()
 
-### Por que importa para o projeto?
-* **Deformação do Solo:** Provavelmente usaremos as duas! Na função `vertex()`, teremos equações (ou dados em C++) para **mudar os vértices do chão**, criando fisicamente os buracos e sulcos das rodas do rover no regolito. Na função `fragment()`, calcularemos a cor cinza da poeira e o comportamento da luz do Sol incidindo sobre o solo.
+Um shader 3D roda em duas etapas na GPU:
 
----
+- `vertex()` — roda pra cada vértice; mexe na forma e posição da malha.
+- `fragment()` — roda pra cada pixel; define cor, brilho, transparência e como a
+  luz bate.
 
-## 2. Mapas de Normais (Normal Mapping) e Amostragem (Sampling)
+Aqui usei só o `fragment()` — a ilusão de onda é feita só com cor, normal e
+reflexo; a malha do plano nem se mexe.
 
-### O Conceito:
-Um mapa de normais (`Normal Map`) é uma textura colorida (geralmente azulada/roxa) onde os canais de cor RGB não representam cores, mas sim vetores de direção $(X, Y, Z)$. Ele engana o motor de renderização, fazendo a luz rebater como se o objeto tivesse micro-relevos e detalhes, sem precisar gastar desempenho adicionando milhões de polígonos reais na malha.
+No ExoTerra vou precisar dos dois: `vertex()` (ou dados vindos do C++) pra afundar
+os vértices do chão e criar os sulcos das rodas, e `fragment()` pra cor da poeira e
+a luz do Sol.
 
-### No tutorial:
-Foi utilizada a função `texture(sampler2D, UV)` para amostrar (ler) os dados de uma textura de ruído gerada pelo próprio motor da Godot (`FastNoiseLite`) configurada especificamente para agir como um mapa de normais.
+## Mapa de normais
 
-### Por que importa para o projeto?
-* **Granularidade do Regolito Lunar:** A areia da Lua é cheia de pedrinhas e micro-texturas ásperas. Podemos usar um mapa de normais procedural para dar o aspecto rugoso, poroso e realista ao solo lunar de forma rápida na GPU.
+Um normal map é uma textura onde o RGB não é cor, é direção (X, Y, Z). Ele engana
+a luz, fazendo parecer que tem micro-relevo sem adicionar polígono nenhum.
+Amostrei com `texture(sampler2D, UV)` um ruído (`FastNoiseLite`) configurado como
+normal map.
 
----
+Isso serve direto pro regolito: dá o aspecto áspero e poroso da areia lunar de
+graça na GPU.
 
-## 3. Deslocamento de Coordenadas UV e Escala de Tempo (UV Offset & Time Scale)
+## Deslocamento de UV + escala de tempo
 
-### O Conceito:
-As coordenadas **UV** são um sistema de mapeamento 2D que diz como uma textura deve ser "vestida" sobre um objeto 3D, variando de `0` a `1` nos eixos horizontal (U) e vertical (V). Como as coordenadas originais são constantes, para mover uma textura é necessário criar uma cópia dessa variável e somar valores a ela ao longo do tempo.
+UV é o mapeamento 2D da textura sobre o objeto (vai de 0 a 1). Como a UV original
+é fixa, pra mover a textura eu copiei ela e somei `sin`/`cos` do `TIME`. Um
+`uniform time_scale` num slider controla a velocidade.
 
-### No tutorial:
-Criamos uma variável de UV customizada e adicionamos funções trigonométricas (`sin` e `cos`) multiplicadas pela variável interna `TIME` da Godot. Ele também criou um parâmetro `uniform float time_scale` controlado por um slider para ajustar a velocidade do movimento.
+No ExoTerra dá pra usar isso pra deslocar marcas/poeira em sincronia com a
+velocidade real do rover (que vem do C++).
 
-### Por que importa para o projeto?
-* **Telemetria de Movimento do Rover:** Quando o robô estiver se deslocando pelas crateras, as rodas vão girar e interagir com o chão. Usaremos o deslocamento de UVs baseado no tempo e na velocidade real do robô (enviada pelo código em C++) para fazer efeitos visuais de poeira ou marcas de pneu se deslocarem sob o veículo de forma sincronizada com a física.
+## Textura de tela + refração
 
----
+`SCREEN_TEXTURE` guarda o que já foi desenhado na tela antes deste shader. Usando
+`SCREEN_UV` eu leio esse fundo e somo uma distorçãozinha do ruído nas coordenadas
+de leitura — é isso que dá o efeito de refração da água.
 
-## 4. Textura de Tela e Refração (Screen Texture & Screen UV)
+## O código que vale anotar
 
-### O Conceito:
-A `SCREEN_TEXTURE` é um buffer especial que armazena a imagem de tudo o que já foi desenhado na tela antes do shader atual ser processado. Usar os valores de `SCREEN_UV` (as coordenadas dos pixels em relação à tela cheia) permite capturar o cenário de fundo e aplicar distorções matemáticas nele.
+Dois trechos que separei porque as ideias reaparecem no projeto.
 
-### No tutorial:
-Para simular a transparência e a refração da água sem perder os reflexos e brilhos da superfície, usamos a dica de textura de tela (`hint_screen_texture`). Somamos pequenas distorções do mapa de ruído às coordenadas de leitura da tela, gerando o efeito visual de distorção de luz (refração).
+### Aberração cromática (defeito de lente, de propósito)
 
-### Por que importa para o projeto?
-* **Sensores de Câmeras e Aberração Cromática:** No final do vídeo, o instrutor adicionou "Aberração Cromática" separando os canais RGB com pequenos offsets. Isso é de extrema importância pois os algoritmos de navegação autônoma do robô vão ler o simulador através de sensores de câmeras digitais reais. Simular imperfeições óticas de lentes, poeira na câmera e distorções na imagem capturada ajuda a testar se os algoritmos do laboratório são robustos o suficiente para falhas do mundo real.
-
-## 5. Análise dos códigos
-
-Abaixo estão detalhados os dois principais mecanismos implementados no código do shader que possuem aplicação direta nas metas de validação de sensores e otimização computacional do projeto.
-
----
-
-### A. Simulação de Artefatos Ópticos: Decomposição de Canais e Aberração Cromática
-
-#### Mecanismo no Código:
-O shader realiza a leitura da textura de amostragem separando os componentes de cor primários através das variáveis `abberration_r`, `abberration_g` e `abberration_b`. Ao adicionar pequenos deslocamentos vetoriais (`vec2`) independentes nas coordenadas de leitura de cada canal, o sistema reconstrói o pixel através da amostragem defasada dos canais Vermelho (R), Verde (G) e Azul (B).
+Leio a textura separando os canais R, G e B com deslocamentos diferentes:
 
 ```glsl
 float r = texture(sun_highlight, _uv + abberration_r).r;
@@ -72,19 +63,15 @@ float g = texture(sun_highlight, _uv + abberration_g).g;
 float b = texture(sun_highlight, _uv + abberration_b).b;
 ```
 
-#### Relevância Científica para o Ambiente Lunar:
-Em missões espaciais, as câmeras de navegação óptica e os sensores computacionais dos rovers não operam em condições ideais. Eles estão expostos a fatores severos do ambiente lunar:
-1. **Radiação Ionizante:** Degrada gradativamente os sensores CMOS/CCD e altera as propriedades de refração dos elementos ópticos de vidro.
-2. **Variações Térmicas Extremas:** A oscilação brusca de temperatura (variando entre aproximadamente -130°C e 120°C) causa microdeformações mecânicas no conjunto de lentes, alterando ligeiramente o plano focal para diferentes comprimentos de onda da luz.
+Isso desalinha as cores de leve e imita uma falha de lente. Pro ExoTerra é útil de
+verdade: as câmeras de navegação do rover sofrem com radiação e variação térmica
+extrema (uns -130 a 120 °C), que deformam a lente e causam aberração cromática
+real. Simular esse defeito de propósito vira um stress test pros algoritmos de
+visão computacional do laboratório.
 
-Esse fenômeno gera a **Aberração Cromática Real**. Dominar a manipulação de coordenadas RGB diretamente na GPU permite introduzir de forma controlada essas distorções ópticas e falhas de lentes induzidas pelo ambiente. Isso fornece um ambiente de teste realista e severo (*stress test*) para avaliar se os algoritmos de visão computacional e navegação autônoma desenvolvidos pelo laboratório mantêm a precisão sob degradação de imagem.
+### soft_light sem `if` (branchless)
 
----
-
-### B. Otimização de Pipeline Gráfico: Substituição de Condicionais por Funções Matemáticas (*Branching Prevention*)
-
-#### Mecanismo no Código:
-Para a execução da função de mesclagem `soft_light()`, evitou-se o uso de estruturas de controle de fluxo tradicionais da CPU (como `if` e `else`). Em seu lugar, foi adotada uma abordagem estritamente matemática combinando as funções nativas de GPU `step()` e `mix()`.
+Pra mesclar as cores eu evitei `if`/`else` e usei `step()` + `mix()`:
 
 ```glsl
 vec3 soft_light(vec3 base, vec3 blend){
@@ -97,10 +84,19 @@ vec3 soft_light(vec3 base, vec3 blend){
 }
 ```
 
-#### Relevância Científica para o Fator de Tempo Real (FTR):
-A arquitetura de hardware das GPUs é projetada para o processamento massivo de dados em paralelo (SIMD - *Single Instruction, Multiple Data*). Quando um bloco condicional `if/else` é inserido em um shader, pode ocorrer o fenômeno de **Divergência de Branching (Ramificação)**. Se uma fração dos pixels da tela satisfizer a condição `if` e a outra fração cair no `else`, a GPU é forçada a executar sequencialmente ambos os caminhos de código, desativando temporariamente o paralelismo e degradando o desempenho.
+Por que fugir do `if` numa GPU: ela processa os pixels em paralelo (SIMD). Se
+metade dos pixels cai no `if` e metade no `else`, ela é obrigada a rodar os dois
+caminhos e perde o paralelismo (divergência de branch). Com o `step()`, todo pixel
+faz a mesma conta e o resultado (0 ou 1) só decide o peso do `mix()`. Isso poupa
+milissegundos por frame — exatamente o tipo de economia que ajuda a segurar o FTR
+quando a ExoPhysics estiver rodando junto.
 
-Ao utilizar o `step(0.5, blend)`, o shader calcula um vetor multiplicador binário (`0.0` ou `1.0`) que decide o peso da interpolação dentro do `mix()`. 
-* **Vantagem:** Toda a massa de pixels executa exatamente as mesmas operações matemáticas simultaneamente, sem desvios de fluxo no hardware.
+---
 
-Essa técnica de otimização de baixo nível é importante para garantir a viabilidade da simulação híbrida do solo deformável. Ela reduz os milissegundos gastos na renderização de cada frame da cena, liberando o processamento da máquina para a validação em tempo real dos modelos constitutivos de física granular da biblioteca *ExoPhysics*, sendo determinante para manter o **Fator de Tempo Real (FTR)** estável.
+**Minhas notas**
+
+- No código tem `NORMAL_MAP = ...` seguido de `NORMAL *= 0.5`. Acho que esse
+  `NORMAL *= 0.5` não faz o efeito que eu esperava; pra suavizar a intensidade das
+  ondas o certo parece ser `NORMAL_MAP_DEPTH`. *(conferir)*
+- O que me confundiu: *(preencher)*
+- Como resolvi: *(preencher)*
